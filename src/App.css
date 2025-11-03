@@ -62,7 +62,7 @@
       height: 0;
     }
   }
-  
+
   @keyframes progress {
     0% {
       transform: translateX(-100%);

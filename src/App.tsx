@@ -1,10 +1,10 @@
 import { useState } from "react";
+import "./App.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
 import { Home } from "./pages/Home";
 import { VisualizerLayer } from "./pages/VisualizerLayer";
 import { VisualizerProduct } from "./pages/VisualizerProduct";
-import "./App.css";
 
 type Page = "home" | "layer" | "product";
 

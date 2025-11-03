@@ -1,16 +1,16 @@
-import { ArrowLeft, Box, Maximize2, Minimize2, Info, MapPin, RotateCw, Download, Zap, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SimpleDropzone } from "@/components/SimpleDropzone";
-import { useModelStore } from "@/stores/useModelStore";
-import ModelView from "@/components/ModelView";
-import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
+import ModelView from "@/components/ModelView";
+import { SimpleDropzone } from "@/components/SimpleDropzone";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useModelStore } from "@/stores/useModelStore";
+import { ArrowLeft, Box, Download, Eye, EyeOff, Info, MapPin, Maximize2, Minimize2, RotateCw, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface VisualizerProductProps {
   onBack: () => void;
@@ -216,7 +216,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
           {/* 3D Viewport */}
           <div className="flex-1 relative bg-muted/20">
             <ModelView />
-            
+
             {/* Top Controls Overlay */}
             <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
               <Button
@@ -359,7 +359,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
                   <Maximize2 className="w-4 h-4 mr-2" />
                   Explode View
                 </h3>
-                
+
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -459,7 +459,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
                               <MapPin className="w-3 h-3 flex-shrink-0" />
                               <p className="font-medium text-sm truncate">{hotspot.name}</p>
                             </div>
-                            <Badge 
+                            <Badge
                               variant={selectedHotspot === hotspot.id ? "secondary" : "outline"}
                               className="text-xs mb-1"
                             >

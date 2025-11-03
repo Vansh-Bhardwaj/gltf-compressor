@@ -1,9 +1,9 @@
-import { Upload, Shield } from "lucide-react";
-import { useDropzone } from "react-dropzone";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { importFiles } from "@/utils/fileIO";
 import { useViewportStore } from "@/stores/useViewportStore";
+import { importFiles } from "@/utils/fileIO";
+import { Shield, Upload } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 
 export function SimpleDropzone() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

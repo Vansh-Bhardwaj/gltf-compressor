@@ -1,7 +1,7 @@
-import { Keyboard } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Keyboard } from "lucide-react";
+import { useState } from "react";
 
 interface Shortcut {
   key: string;

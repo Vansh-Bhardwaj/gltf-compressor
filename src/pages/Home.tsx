@@ -1,7 +1,7 @@
-import { Box, Layers, Package, Github } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Box, Github, Layers, Package } from "lucide-react";
 
 interface HomeProps {
   onSelectVisualizer: (type: "layer" | "product") => void;

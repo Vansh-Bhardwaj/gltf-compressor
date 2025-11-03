@@ -1,6 +1,6 @@
+import { AppTheme } from "@/types/types";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { AppTheme } from "@/types/types";
 
 interface ThemeStore {
   activeThemeId: string;

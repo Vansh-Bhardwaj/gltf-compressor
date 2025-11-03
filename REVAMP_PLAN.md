@@ -148,8 +148,8 @@ Files likely to be removed or modified:
 
 ## Suggested immediate next step options
 
-1. Audit code for compression references and produce a precise list of files + lines to edit (safe).  
-2. Scaffold `Home` + `Visualizer` pages and a `ModelCanvas` skeleton (fast visible change).  
+1. Audit code for compression references and produce a precise list of files + lines to edit (safe).
+2. Scaffold `Home` + `Visualizer` pages and a `ModelCanvas` skeleton (fast visible change).
 3. Create `src/DEVELOPMENT.md` with a short editing guide and pointers (docs).
 
 Tell me which immediate step you want me to run and I'll start (I can scan the codebase for compression references now if you want).

@@ -196,7 +196,7 @@ export const useModelStore = create<ModelStore>()(
       },
       resetModel: () => {
         const state = get();
-        
+
         // Clean up Three.js objects to prevent memory leaks
         if (state.originalScene) {
           state.originalScene.traverse((child: any) => {
@@ -210,7 +210,7 @@ export const useModelStore = create<ModelStore>()(
             }
           });
         }
-        
+
         if (state.modifiedScene) {
           state.modifiedScene.traverse((child: any) => {
             if (child.geometry) child.geometry.dispose();
@@ -223,13 +223,13 @@ export const useModelStore = create<ModelStore>()(
             }
           });
         }
-        
+
         // Reset viewport states (loading, reveal, etc.)
-        useViewportStore.setState({ 
+        useViewportStore.setState({
           loadingFiles: false,
           revealScene: false,
         });
-        
+
         set({
           fileName: "",
           originalDocument: null,

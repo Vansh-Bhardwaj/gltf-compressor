@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useThemeStore } from "@/stores/useThemeStore";
-import { AppTheme } from "@/types/types";
 import defaultThemeData from "@/themes/default.json";
 import shopifyThemeData from "@/themes/shopify.json";
+import { AppTheme } from "@/types/types";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 

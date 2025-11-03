@@ -1,17 +1,17 @@
-import { ArrowLeft, Layers, Play, Pause, SkipBack, SkipForward, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SimpleDropzone } from "@/components/SimpleDropzone";
-import { useModelStore } from "@/stores/useModelStore";
-import ModelView from "@/components/ModelView";
-import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
-import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
+import ModelView from "@/components/ModelView";
+import { SimpleDropzone } from "@/components/SimpleDropzone";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useModelStore } from "@/stores/useModelStore";
+import { ArrowLeft, Download, Layers, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface VisualizerLayerProps {
   onBack: () => void;
@@ -188,7 +188,7 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
           {/* 3D Viewport */}
           <div className="flex-1 relative bg-muted/20">
             <ModelView />
-            
+
             {/* Step Indicator Overlay */}
             <div className="absolute top-4 left-4 z-10">
               <Card className="p-4 bg-card/95 backdrop-blur-sm min-w-[200px]">
@@ -225,7 +225,7 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
                   <Play className="w-4 h-4 mr-2" />
                   Timeline Controls
                 </h3>
-                
+
                 {/* Step Slider */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
@@ -344,8 +344,8 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
                             </p>
                           </div>
                         </div>
-                        <Badge 
-                          variant={currentStep === index ? "secondary" : "outline"} 
+                        <Badge
+                          variant={currentStep === index ? "secondary" : "outline"}
                           className="text-xs ml-2 flex-shrink-0"
                         >
                           {step.meshCount}
