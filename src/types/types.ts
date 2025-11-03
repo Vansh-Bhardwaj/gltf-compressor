@@ -36,3 +36,79 @@ export interface TextureBounds {
   bottom: number;
   statusShouldBeAboveBottomEdge: boolean;
 }
+
+// Theme Engine Types
+export interface ThemeColors {
+  primary: string;
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  popover: string;
+  popoverForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  muted: string;
+  mutedForeground: string;
+  accent: string;
+  accentForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+}
+
+export interface ThemeTypography {
+  fontFamily: string;
+  baseFontSize: number;
+  headingFontFamily?: string;
+}
+
+export interface ThemeLogo {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface ThemeComponents {
+  button?: {
+    borderRadius?: string;
+  };
+  card?: {
+    borderRadius?: string;
+  };
+}
+
+export interface AppTheme {
+  id: string;
+  name: string;
+  colors: ThemeColors;
+  typography: ThemeTypography;
+  logo?: ThemeLogo;
+  components?: ThemeComponents;
+  published?: boolean;
+}
+
+// Visualizer Types
+export interface VisualizerStep {
+  id: string;
+  title?: string;
+  description?: string;
+  meshIds: string[];
+  cameraPosition?: [number, number, number];
+  cameraTarget?: [number, number, number];
+  animationParams?: {
+    duration: number;
+    easing?: string;
+  };
+}
+
+export interface VisualizerHotspot {
+  id: string;
+  label: string;
+  description?: string;
+  worldPosition: [number, number, number];
+  relatedMeshIds: string[];
+}

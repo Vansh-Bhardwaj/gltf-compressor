@@ -11,6 +11,7 @@ import {
   TextureBounds,
   TextureCompressionSettings,
 } from "@/types/types";
+import { useViewportStore } from "./useViewportStore";
 
 interface ModelStore {
   fileName: string;
@@ -33,6 +34,7 @@ interface ModelStore {
   ) => void;
   setInitialModelStats: () => void;
   updateModelStats: () => void;
+  resetModel: () => void;
 }
 
 export const useModelStore = create<ModelStore>()(
@@ -189,6 +191,75 @@ export const useModelStore = create<ModelStore>()(
               (modelStats.sizeOfAnimations / totalSize) * 100,
             percentChangeInTextures,
             percentChangeInTotalSize,
+          },
+        });
+      },
+      resetModel: () => {
+        const state = get();
+        
+        // Clean up Three.js objects to prevent memory leaks
+        if (state.originalScene) {
+          state.originalScene.traverse((child: any) => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat: any) => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          });
+        }
+        
+        if (state.modifiedScene) {
+          state.modifiedScene.traverse((child: any) => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat: any) => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          });
+        }
+        
+        // Reset viewport states (loading, reveal, etc.)
+        useViewportStore.setState({ 
+          loadingFiles: false,
+          revealScene: false,
+        });
+        
+        set({
+          fileName: "",
+          originalDocument: null,
+          modifiedDocument: null,
+          originalDocumentView: null,
+          modifiedDocumentView: null,
+          originalScene: null,
+          modifiedScene: null,
+          textureCompressionSettingsMap: new Map<Texture, TextureCompressionSettings>(),
+          selectedMaterial: null,
+          selectedTextureSlot: "",
+          selectedTexture: null,
+          textureBounds: null,
+          modelStats: {
+            numMeshes: 0,
+            numVertices: 0,
+            numTextures: 0,
+            numAnimationClips: 0,
+            texturesInModifiedDocument: [],
+            initialSizeOfTextures: 0,
+            initialTotalSize: 0,
+            sizeOfMeshes: 0,
+            sizeOfTextures: 0,
+            sizeOfAnimations: 0,
+            totalSize: 0,
+            percentOfSizeTakenByMeshes: 0,
+            percentOfSizeTakenByTextures: 0,
+            percentOfSizeTakenByAnimations: 0,
+            percentChangeInTextures: 0,
+            percentChangeInTotalSize: 0,
           },
         });
       },

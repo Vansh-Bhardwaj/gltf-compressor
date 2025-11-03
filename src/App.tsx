@@ -1,57 +1,31 @@
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-
-import { Dropzone } from "./components/Dropzone";
-import Footer from "./components/Footer";
-import ModelView from "./components/ModelView";
-import SettingsView from "./components/SettingsView";
-import StatsView from "./components/StatsView";
-import TextureView from "./components/TextureView";
-import TextureViewStatus from "./components/TextureViewStatus";
+import { useState } from "react";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
-import { useModelStore } from "./stores/useModelStore";
-import { useViewportStore } from "./stores/useViewportStore";
+import { Home } from "./pages/Home";
+import { VisualizerLayer } from "./pages/VisualizerLayer";
+import { VisualizerProduct } from "./pages/VisualizerProduct";
+import "./App.css";
+
+type Page = "home" | "layer" | "product";
 
 function App() {
-  const originalDocument = useModelStore((state) => state.originalDocument);
+  const [currentPage, setCurrentPage] = useState<Page>("home");
+
+  const handleSelectVisualizer = (type: "layer" | "product") => {
+    setCurrentPage(type);
+  };
+
+  const handleBack = () => {
+    setCurrentPage("home");
+  };
 
   return (
     <ThemeProvider>
-      {originalDocument ? (
-        <div className="flex h-full">
-          <div className="w-[80%] h-full">
-            <PanelGroup direction="horizontal">
-              <Panel
-                defaultSize={66}
-                minSize={0}
-                onResize={(size) => {
-                  useViewportStore.setState({ modelViewPanelSize: size });
-                }}
-              >
-                <ModelView />
-              </Panel>
-              <PanelResizeHandle className="ResizeHandle">
-                <div className="ResizeHandleThumb" data-direction="horizontal">
-                  ⋮
-                </div>
-              </PanelResizeHandle>
-              <Panel defaultSize={34} minSize={0}>
-                <div id="texture-view-container">
-                  <TextureView />
-                  <TextureViewStatus />
-                </div>
-              </Panel>
-            </PanelGroup>
-          </div>
-          <div className="w-[20%] h-full overflow-y-auto">
-            <SettingsView />
-          </div>
-          <StatsView />
-          <Footer />
-        </div>
-      ) : (
-        <Dropzone />
+      {currentPage === "home" && (
+        <Home onSelectVisualizer={handleSelectVisualizer} />
       )}
+      {currentPage === "layer" && <VisualizerLayer onBack={handleBack} />}
+      {currentPage === "product" && <VisualizerProduct onBack={handleBack} />}
       <Toaster position="top-center" richColors toastOptions={{}} />
     </ThemeProvider>
   );

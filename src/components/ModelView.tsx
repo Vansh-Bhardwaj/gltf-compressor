@@ -43,7 +43,6 @@ export default function ModelView() {
     };
   }, []);
 
-  const fallbackRef = useRef<HTMLDivElement>(null);
   const hologramRef = useRef<{ playAnimation: () => void } | null>(null);
   const gridRef = useRef<{ playAnimation: () => void } | null>(null);
 
@@ -144,11 +143,6 @@ export default function ModelView() {
           modelHeightRef.current =
             useViewportStore.getState().modelDimensions?.[1] ?? 0;
 
-          // Hide the fallback text
-          if (fallbackRef.current) {
-            fallbackRef.current.style.display = "none";
-          }
-
           // Reveal the modified scene by animating a clipping plane from the bottom of the model to the top
           if (hologramRef.current) {
             hologramRef.current.playAnimation();
@@ -209,9 +203,6 @@ export default function ModelView() {
           />
         </GizmoHelper>
       </Canvas>
-      <div id="model-view-fallback" ref={fallbackRef}>
-        <span>Loading Model...</span>
-      </div>
     </div>
   );
 }
