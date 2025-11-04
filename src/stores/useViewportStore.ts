@@ -16,6 +16,12 @@ interface ViewportStore {
   showModifiedDocument: boolean;
   confettiCounter: number;
   triggerConfetti: () => void;
+  reverseRevealCounter: number;
+  triggerReverseReveal: () => void;
+  reverseRevealActive: boolean;
+  setReverseRevealActive: (value: boolean) => void;
+  setShowGrid: (value: boolean) => void;
+  setAutoRotateCamera: (value: boolean) => void;
 }
 
 export const useViewportStore = create<ViewportStore>()(
@@ -35,6 +41,15 @@ export const useViewportStore = create<ViewportStore>()(
       confettiCounter: 0,
       triggerConfetti: () =>
         set((state) => ({ confettiCounter: state.confettiCounter + 1 })),
+      reverseRevealCounter: 0,
+      triggerReverseReveal: () =>
+        set((state) => ({
+          reverseRevealCounter: state.reverseRevealCounter + 1,
+        })),
+      reverseRevealActive: false,
+      setReverseRevealActive: (value: boolean) => set({ reverseRevealActive: value }),
+      setShowGrid: (value: boolean) => set({ showGrid: value }),
+      setAutoRotateCamera: (value: boolean) => set({ autoRotateCamera: value }),
     };
   })
 );

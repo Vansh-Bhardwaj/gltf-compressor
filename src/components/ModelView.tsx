@@ -1,7 +1,8 @@
 import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef } from "react";
-import { Group, Material, Plane, Vector3 } from "three";
+import { Mesh as MeshDef, Node as NodeDef } from "@gltf-transform/core";
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
+import { Group, Material, Mesh, Object3D, Plane, Vector3 } from "three";
 import { useShallow } from "zustand/react/shallow";
 
 import { useModelStore } from "@/stores/useModelStore";
@@ -16,9 +17,36 @@ import { Stage } from "./drei/Stage";
 import { Hologram } from "./Hologram";
 import MaterialHighlighter from "./MaterialHighlighter";
 
+const isMeshObject = (object: Object3D): object is Mesh => {
+  return (object as Mesh).isMesh === true;
+};
+
 export default function ModelView() {
-  const [originalScene, modifiedScene] = useModelStore(
-    useShallow((state) => [state.originalScene, state.modifiedScene])
+  const [
+    originalScene,
+    modifiedScene,
+    modifiedDocumentView,
+    visualizerSteps,
+    nodeStepMap,
+    meshStepMap,
+    activeStepIndex,
+  ] = useModelStore(
+    useShallow((state) => [
+      state.originalScene,
+      state.modifiedScene,
+      state.modifiedDocumentView,
+      state.visualizerSteps,
+      state.nodeStepMap,
+      state.meshStepMap,
+      state.activeVisualizerStepIndex,
+    ])
+  );
+
+  const { reverseRevealCounter, reverseRevealActive } = useViewportStore(
+    useShallow((state) => ({
+      reverseRevealCounter: state.reverseRevealCounter,
+      reverseRevealActive: state.reverseRevealActive,
+    }))
   );
 
   const originalSceneRef = useRef<Group | null>(null);
@@ -43,7 +71,10 @@ export default function ModelView() {
     };
   }, []);
 
-  const hologramRef = useRef<{ playAnimation: () => void } | null>(null);
+  const hologramRef = useRef<{
+    playAnimation: () => void;
+    playReverseAnimation: () => void;
+  } | null>(null);
   const gridRef = useRef<{ playAnimation: () => void } | null>(null);
 
   const originalSceneMaterialsRef = useRef<Material[]>([]);
@@ -54,6 +85,60 @@ export default function ModelView() {
     return [new Plane(new Vector3(0, -1, 0), 0.0)];
   }, []);
 
+  const stepIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    visualizerSteps.forEach((step, index) => {
+      map.set(step.id, index);
+    });
+    return map;
+  }, [visualizerSteps]);
+
+  const prepareSceneMaterials = useCallback((): boolean => {
+    if (!originalScene || !modifiedScene) {
+      return false;
+    }
+
+    originalSceneMaterialsRef.current = [];
+    modifiedSceneMaterialsRef.current = [];
+
+    const collectMaterials = (scene: Group, target: Material[]): void => {
+      scene.traverse((object) => {
+        if (!isMeshObject(object)) {
+          return;
+        }
+
+        const mesh = object;
+        const materials = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+
+        if (
+          mesh.geometry &&
+          materials.some(
+            (material) => material?.name === "__DefaultMaterial"
+          ) &&
+          !mesh.geometry.getAttribute("normal")
+        ) {
+          mesh.geometry.computeVertexNormals();
+        }
+
+        materials.forEach((material) => {
+          if (material) {
+            target.push(material);
+          }
+        });
+      });
+    };
+
+    collectMaterials(originalScene, originalSceneMaterialsRef.current);
+    collectMaterials(modifiedScene, modifiedSceneMaterialsRef.current);
+
+    modelHeightRef.current =
+      useViewportStore.getState().modelDimensions?.[1] ?? 0;
+
+    return true;
+  }, [modifiedScene, originalScene]);
+
   const [revealSpring, revealSpringAPI] = useSpring(
     () => ({
       from: { progress: 0.0 },
@@ -62,7 +147,6 @@ export default function ModelView() {
         duration: 1000,
       },
       onStart: () => {
-        // Show the modified scene for the first time
         if (modifiedSceneRef.current) {
           modifiedSceneRef.current.visible = true;
         }
@@ -72,12 +156,10 @@ export default function ModelView() {
           return;
         }
 
-        // Move the clipping plane from the bottom of the model to the top
         const modelHeight = modelHeightRef.current;
         clippingPlane[0].constant =
           -modelHeight * 0.5 + revealSpring.progress.get() * modelHeight;
 
-        // Apply the clipping plane to the original scene and the modified scene
         originalSceneMaterialsRef.current.forEach((material) => {
           material.clippingPlanes = clippingPlane;
         });
@@ -90,7 +172,10 @@ export default function ModelView() {
           return;
         }
 
-        // Remove the clipping plane from the original scene and the modified scene
+        if (useViewportStore.getState().reverseRevealActive) {
+          return;
+        }
+
         originalSceneMaterialsRef.current.forEach((material) => {
           material.clippingPlanes = [];
         });
@@ -106,62 +191,130 @@ export default function ModelView() {
     const unsubscribe = useViewportStore.subscribe(
       (state) => state.revealScene,
       (revealScene) => {
-        if (revealScene) {
-          originalSceneMaterialsRef.current = [];
-          modifiedSceneMaterialsRef.current = [];
-
-          // Store the materials in refs so we don't have to traverse the scene every frame while the reveal spring is running
-          // Also compute vertex normals for models that don't have them and that use the default material of gltf-transform
-          // If we don't do this, those models render completely black
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          originalScene?.traverse((child: any) => {
-            if (child.isMesh && child.material) {
-              if (
-                child.material.name === "__DefaultMaterial" &&
-                !child.geometry.attributes.normal
-              ) {
-                child.geometry.computeVertexNormals();
-              }
-
-              originalSceneMaterialsRef.current.push(child.material);
-            }
-          });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          modifiedScene?.traverse((child: any) => {
-            if (child.isMesh && child.material) {
-              if (
-                child.material.name === "__DefaultMaterial" &&
-                !child.geometry.attributes.normal
-              ) {
-                child.geometry.computeVertexNormals();
-              }
-
-              modifiedSceneMaterialsRef.current.push(child.material);
-            }
-          });
-
-          modelHeightRef.current =
-            useViewportStore.getState().modelDimensions?.[1] ?? 0;
-
-          // Reveal the modified scene by animating a clipping plane from the bottom of the model to the top
-          if (hologramRef.current) {
-            hologramRef.current.playAnimation();
-          }
-          if (gridRef.current) {
-            gridRef.current.playAnimation();
-          }
-          revealSpringAPI.start({
-            to: { progress: 1.0 },
-            delay: 1000,
-          });
+        if (!revealScene) {
+          return;
         }
+
+        if (!prepareSceneMaterials()) {
+          return;
+        }
+
+        if (hologramRef.current) {
+          hologramRef.current.playAnimation();
+        }
+        if (gridRef.current) {
+          gridRef.current.playAnimation();
+        }
+
+        // Start clipping after 1 second (when hologram fade-in completes)
+        revealSpringAPI.start({
+          to: { progress: 1.0 },
+          delay: 1000,
+        });
       }
     );
 
     return () => {
       unsubscribe();
     };
-  }, [originalScene, modifiedScene, revealSpringAPI]);
+  }, [prepareSceneMaterials, revealSpringAPI]);
+
+  useEffect(() => {
+    if (reverseRevealCounter === 0) {
+      return;
+    }
+
+    if (!prepareSceneMaterials()) {
+      return;
+    }
+
+    if (hologramRef.current) {
+      hologramRef.current.playReverseAnimation();
+    }
+    if (gridRef.current) {
+      gridRef.current.playAnimation();
+    }
+
+    // Start clipping immediately - hologram descends for 1s, then fades for 1s
+    // Clipping should hide the model during the first 1s (descent phase)
+    revealSpringAPI.start({
+      to: { progress: 0.0 },
+      delay: 0,
+      config: {
+        easing: easings.easeInCubic,
+        duration: 1000,
+      },
+    });
+  }, [reverseRevealCounter, prepareSceneMaterials, revealSpringAPI]);
+
+  const wasReverseRevealActiveRef = useRef(reverseRevealActive);
+
+  useEffect(() => {
+    if (
+      wasReverseRevealActiveRef.current &&
+      !reverseRevealActive &&
+      originalScene &&
+      modifiedScene
+    ) {
+      originalSceneMaterialsRef.current.forEach((material) => {
+        material.clippingPlanes = [];
+      });
+      modifiedSceneMaterialsRef.current.forEach((material) => {
+        material.clippingPlanes = [];
+      });
+    }
+
+    wasReverseRevealActiveRef.current = reverseRevealActive;
+  }, [reverseRevealActive, originalScene, modifiedScene]);
+
+  useEffect(() => {
+    if (!modifiedScene || !modifiedDocumentView) {
+      return;
+    }
+
+    if (stepIndexById.size === 0 || activeStepIndex === -1) {
+      modifiedScene.traverse((object) => {
+        object.visible = true;
+      });
+      return;
+    }
+
+    modifiedScene.traverse((object) => {
+      const property = modifiedDocumentView.getProperty(object);
+      if (!property) {
+        object.visible = true;
+        return;
+      }
+
+      let stepId: string | undefined;
+
+      if (property instanceof MeshDef) {
+        stepId = meshStepMap.get(property);
+      } else if (property instanceof NodeDef) {
+        stepId = nodeStepMap.get(property);
+      }
+
+      if (!stepId) {
+        object.visible = true;
+        return;
+      }
+
+      const stepIndex = stepIndexById.get(stepId);
+      if (stepIndex === undefined) {
+        object.visible = true;
+        return;
+      }
+
+      object.visible = stepIndex <= activeStepIndex;
+    });
+  }, [
+    modifiedScene,
+    modifiedDocumentView,
+    stepIndexById,
+    nodeStepMap,
+    meshStepMap,
+    activeStepIndex,
+  ]);
 
   if (!originalScene || !modifiedScene) return null;
 

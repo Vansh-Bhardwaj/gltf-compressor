@@ -1,4 +1,4 @@
-import { Document, Material, Texture } from "@gltf-transform/core";
+import { Document, Material, Mesh, Node, Texture } from "@gltf-transform/core";
 import { inspect } from "@gltf-transform/functions";
 import { DocumentView } from "@gltf-transform/view";
 import { produce } from "immer";
@@ -10,6 +10,8 @@ import {
   ModelStats,
   TextureBounds,
   TextureCompressionSettings,
+  VisualizerStep,
+  VisualizerStepMetadata,
 } from "@/types/types";
 import { useViewportStore } from "./useViewportStore";
 
@@ -27,6 +29,11 @@ interface ModelStore {
   selectedTexture: Texture | null;
   textureBounds: TextureBounds | null;
   modelStats: ModelStats;
+  visualizerSteps: VisualizerStep[];
+  visualizerStepMetadata: Map<string, VisualizerStepMetadata>;
+  nodeStepMap: Map<Node, string>;
+  meshStepMap: Map<Mesh, string>;
+  activeVisualizerStepIndex: number;
 
   updateTextureCompressionSettings: (
     texture: Texture,
@@ -35,6 +42,13 @@ interface ModelStore {
   setInitialModelStats: () => void;
   updateModelStats: () => void;
   resetModel: () => void;
+  setLayerVisualizerData: (params: {
+    steps: VisualizerStep[];
+    metadataByStep: Map<string, VisualizerStepMetadata>;
+    nodeStepMap: Map<Node, string>;
+    meshStepMap: Map<Mesh, string>;
+  }) => void;
+  setActiveVisualizerStepIndex: (index: number) => void;
 }
 
 export const useModelStore = create<ModelStore>()(
@@ -73,6 +87,11 @@ export const useModelStore = create<ModelStore>()(
         initialTotalSize: 0,
         percentChangeInTotalSize: 0,
       },
+      visualizerSteps: [],
+      visualizerStepMetadata: new Map<string, VisualizerStepMetadata>(),
+      nodeStepMap: new Map<Node, string>(),
+      meshStepMap: new Map<Mesh, string>(),
+      activeVisualizerStepIndex: -1,
 
       updateTextureCompressionSettings: (
         texture: Texture,
@@ -228,6 +247,8 @@ export const useModelStore = create<ModelStore>()(
         useViewportStore.setState({
           loadingFiles: false,
           revealScene: false,
+          reverseRevealCounter: 0,
+          reverseRevealActive: false,
         });
 
         set({
@@ -261,7 +282,44 @@ export const useModelStore = create<ModelStore>()(
             percentChangeInTextures: 0,
             percentChangeInTotalSize: 0,
           },
+          visualizerSteps: [],
+          visualizerStepMetadata: new Map<string, VisualizerStepMetadata>(),
+          nodeStepMap: new Map<Node, string>(),
+          meshStepMap: new Map<Mesh, string>(),
+          activeVisualizerStepIndex: -1,
         });
+      },
+      setLayerVisualizerData: ({
+        steps,
+        metadataByStep,
+        nodeStepMap,
+        meshStepMap,
+      }) => {
+        set({
+          visualizerSteps: steps,
+          visualizerStepMetadata: new Map(metadataByStep),
+          nodeStepMap: new Map(nodeStepMap),
+          meshStepMap: new Map(meshStepMap),
+          activeVisualizerStepIndex: -1,
+        });
+      },
+      setActiveVisualizerStepIndex: (index: number) => {
+        const { visualizerSteps } = get();
+        if (visualizerSteps.length === 0) {
+          set({ activeVisualizerStepIndex: -1 });
+          return;
+        }
+
+          if (index < 0) {
+            set({ activeVisualizerStepIndex: -1 });
+            return;
+          }
+
+        const clampedIndex = Math.min(
+          Math.max(index, 0),
+          visualizerSteps.length - 1
+        );
+        set({ activeVisualizerStepIndex: clampedIndex });
       },
     };
   })

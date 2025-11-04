@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useModelStore } from "@/stores/useModelStore";
 import { useViewportStore } from "@/stores/useViewportStore";
 import { TextureCompressionSettings } from "@/types/types";
+import { generateLayerVisualizerData } from "./visualizerLayerGeneration";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 
 const isGLBFile = (path: string): boolean => /\.glb$/i.test(path);
@@ -382,6 +383,7 @@ export const importFiles = async <T extends File>(acceptedFiles: T[]) => {
         originalDocument,
         modifiedDocument
       );
+  const layerData = generateLayerVisualizerData(modifiedDocument);
 
       useModelStore.setState({
         fileName,
@@ -394,6 +396,7 @@ export const importFiles = async <T extends File>(acceptedFiles: T[]) => {
         textureCompressionSettingsMap,
       });
 
+      useModelStore.getState().setLayerVisualizerData(layerData);
       useModelStore.getState().setInitialModelStats();
       URL.revokeObjectURL(url);
     }
@@ -439,6 +442,7 @@ export const importFiles = async <T extends File>(acceptedFiles: T[]) => {
       originalDocument,
       modifiedDocument
     );
+  const layerData = generateLayerVisualizerData(modifiedDocument);
 
     useModelStore.setState({
       fileName,
@@ -451,6 +455,7 @@ export const importFiles = async <T extends File>(acceptedFiles: T[]) => {
       textureCompressionSettingsMap,
     });
 
+    useModelStore.getState().setLayerVisualizerData(layerData);
     useModelStore.getState().setInitialModelStats();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

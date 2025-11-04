@@ -283,14 +283,32 @@ export const Hologram = forwardRef((_, ref) => {
 
   const playAnimation = (): void => {
     revealSpringAPI.start({
+      from: { progress: 0.0 },
       to: {
         progress: 1.0,
       },
     });
   };
 
+  const playReverseAnimation = (): void => {
+    // Reset position before starting reverse
+    if (hologramRef.current) {
+      hologramRef.current.position.set(0, -modelHeightRef.current / 2 + modelHeightRef.current, 0);
+    }
+    
+    revealSpringAPI.start({
+      from: {
+        progress: 1.0,
+      },
+      to: {
+        progress: 0.0,
+      },
+    });
+  };
+
   useImperativeHandle(ref, () => ({
     playAnimation,
+    playReverseAnimation,
   }));
 
   return (

@@ -112,3 +112,9 @@ export interface VisualizerHotspot {
   worldPosition: [number, number, number];
   relatedMeshIds: string[];
 }
+
+export interface VisualizerStepMetadata {
+  nodeNames: string[];
+  meshCount: number;
+  primitiveCount: number;
+}
