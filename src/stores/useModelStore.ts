@@ -249,6 +249,9 @@ export const useModelStore = create<ModelStore>()(
           revealScene: false,
           reverseRevealCounter: 0,
           reverseRevealActive: false,
+          showGrid: true,
+          showModifiedDocument: true,
+          modelDimensions: null,
           initialRevealComplete: false,
         });
 

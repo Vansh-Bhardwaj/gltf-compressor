@@ -1,12 +1,12 @@
 import { useViewportStore } from "@/stores/useViewportStore";
 import { useThree } from "@react-three/fiber";
 import {
-  createContext,
-  JSX,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
+    createContext,
+    JSX,
+    useContext,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { Box3, Group, Object3D, Vector3 } from "three";
 
@@ -124,6 +124,7 @@ function Bounds({ children }: JSX.IntrinsicElements["group"]) {
         useViewportStore.setState({
           revealScene: true,
           initialRevealComplete: false,
+          showModifiedDocument: true,
         });
 
         return apiObject;

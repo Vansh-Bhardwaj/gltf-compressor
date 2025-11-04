@@ -13,8 +13,10 @@ export default function CameraControls() {
       (autoRotateCamera) => {
         if (orbitControlsRef.current) {
           orbitControlsRef.current.autoRotate = autoRotateCamera;
+          orbitControlsRef.current.update();
         }
-      }
+      },
+      { fireImmediately: true }
     );
 
     return () => {
