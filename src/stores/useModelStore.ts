@@ -249,6 +249,7 @@ export const useModelStore = create<ModelStore>()(
           revealScene: false,
           reverseRevealCounter: 0,
           reverseRevealActive: false,
+          initialRevealComplete: false,
         });
 
         set({

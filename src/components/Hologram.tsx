@@ -1,18 +1,18 @@
 import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
 } from "react";
 import {
-  BufferAttribute,
-  BufferGeometry,
-  CatmullRomCurve3,
-  Color,
-  Mesh,
-  ShaderMaterial,
-  Vector3,
+    BufferAttribute,
+    BufferGeometry,
+    CatmullRomCurve3,
+    Color,
+    Mesh,
+    ShaderMaterial,
+    Vector3,
 } from "three";
 
 import { useViewportStore } from "@/stores/useViewportStore";
@@ -295,7 +295,7 @@ export const Hologram = forwardRef((_, ref) => {
     if (hologramRef.current) {
       hologramRef.current.position.set(0, -modelHeightRef.current / 2 + modelHeightRef.current, 0);
     }
-    
+
     revealSpringAPI.start({
       from: {
         progress: 1.0,

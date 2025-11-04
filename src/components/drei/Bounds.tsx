@@ -121,7 +121,10 @@ function Bounds({ children }: JSX.IntrinsicElements["group"]) {
           controls.update();
         }
 
-        useViewportStore.setState({ revealScene: true });
+        useViewportStore.setState({
+          revealScene: true,
+          initialRevealComplete: false,
+        });
 
         return apiObject;
       },

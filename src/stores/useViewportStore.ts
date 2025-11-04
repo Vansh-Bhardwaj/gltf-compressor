@@ -20,6 +20,8 @@ interface ViewportStore {
   triggerReverseReveal: () => void;
   reverseRevealActive: boolean;
   setReverseRevealActive: (value: boolean) => void;
+  initialRevealComplete: boolean;
+  setInitialRevealComplete: (value: boolean) => void;
   setShowGrid: (value: boolean) => void;
   setAutoRotateCamera: (value: boolean) => void;
 }
@@ -48,6 +50,8 @@ export const useViewportStore = create<ViewportStore>()(
         })),
       reverseRevealActive: false,
       setReverseRevealActive: (value: boolean) => set({ reverseRevealActive: value }),
+      initialRevealComplete: false,
+      setInitialRevealComplete: (value: boolean) => set({ initialRevealComplete: value }),
       setShowGrid: (value: boolean) => set({ showGrid: value }),
       setAutoRotateCamera: (value: boolean) => set({ autoRotateCamera: value }),
     };

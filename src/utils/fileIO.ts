@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { useModelStore } from "@/stores/useModelStore";
 import { useViewportStore } from "@/stores/useViewportStore";
 import { TextureCompressionSettings } from "@/types/types";
-import { generateLayerVisualizerData } from "./visualizerLayerGeneration";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
+import { generateLayerVisualizerData } from "./visualizerLayerGeneration";
 
 const isGLBFile = (path: string): boolean => /\.glb$/i.test(path);
 
@@ -33,15 +33,6 @@ const loadFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     reader.onerror = () => reject(reader.error);
     reader.readAsArrayBuffer(file);
   });
-};
-
-const convertArrayBufferToBase64 = (buffer: Uint8Array): string => {
-  let binary = "";
-  const len = buffer.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(buffer[i]);
-  }
-  return btoa(binary);
 };
 
 const createDocumentsAndSceneFromURL = async (url: string) => {
@@ -109,6 +100,15 @@ const createDocumentsAndSceneFromBuffers = async (
   buffers: Map<string, ArrayBuffer>,
   mainFilePath: string
 ) => {
+  const temporaryObjectUrls: string[] = [];
+
+  const createObjectUrl = (data: ArrayBuffer, mimeType: string) => {
+    const blob = new Blob([data], { type: mimeType });
+    const objectUrl = URL.createObjectURL(blob);
+    temporaryObjectUrls.push(objectUrl);
+    return objectUrl;
+  };
+
   const io = new WebIO()
     .registerExtensions(ALL_EXTENSIONS)
     .registerDependencies({
@@ -119,6 +119,7 @@ const createDocumentsAndSceneFromBuffers = async (
       "draco3d.decoder":
         // @ts-ignore
         await new DracoDecoderModule(),
+      "meshopt.decoder": MeshoptDecoder,
     });
 
   // Get the buffer of the .gltf file
@@ -162,12 +163,9 @@ const createDocumentsAndSceneFromBuffers = async (
         }
 
         if (bufferData) {
-          // Convert to base64 data URI efficiently
-          const uint8Array = new Uint8Array(bufferData);
-          const base64 = convertArrayBufferToBase64(uint8Array);
           return {
             ...buffer,
-            uri: `data:application/octet-stream;base64,${base64}`,
+            uri: createObjectUrl(bufferData, "application/octet-stream"),
           };
         }
 
@@ -208,13 +206,16 @@ const createDocumentsAndSceneFromBuffers = async (
             jpeg: "image/jpeg",
             png: "image/png",
             webp: "image/webp",
+            ktx2: "image/ktx2",
+            basis: "image/basis",
+            avif: "image/avif",
           };
           const mimeType = mimeTypeMap[ext || ""] || "application/octet-stream";
 
-          // Convert to base64 data URI efficiently
-          const uint8Array = new Uint8Array(imageData);
-          const base64 = convertArrayBufferToBase64(uint8Array);
-          return { ...image, uri: `data:${mimeType};base64,${base64}` };
+          return {
+            ...image,
+            uri: createObjectUrl(imageData, mimeType),
+          };
         }
 
         // Add to missing files list
@@ -243,6 +244,8 @@ const createDocumentsAndSceneFromBuffers = async (
   } finally {
     // Clean up the blob URL
     URL.revokeObjectURL(jsonBlobUrl);
+    temporaryObjectUrls.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
+    temporaryObjectUrls.length = 0;
   }
 
   const modifiedDocument = cloneDocument(originalDocument);

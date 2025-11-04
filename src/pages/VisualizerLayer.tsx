@@ -48,12 +48,14 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
   const triggerReverseReveal = useViewportStore((state) => state.triggerReverseReveal);
   const reverseRevealActive = useViewportStore((state) => state.reverseRevealActive);
   const setReverseRevealActive = useViewportStore((state) => state.setReverseRevealActive);
+  const initialRevealComplete = useViewportStore((state) => state.initialRevealComplete);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   const previewTimerRef = useRef<number | null>(null);
   const collapseTimerRef = useRef<number | null>(null);
   const initialSequenceStartedRef = useRef(false);
+  const previousInitialRevealRef = useRef(initialRevealComplete);
 
   const clearInitialTimers = useCallback(() => {
     if (previewTimerRef.current !== null) {
@@ -72,6 +74,14 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
       clearInitialTimers();
     };
   }, [clearInitialTimers]);
+
+  useEffect(() => {
+    if (previousInitialRevealRef.current && !initialRevealComplete) {
+      clearInitialTimers();
+      initialSequenceStartedRef.current = false;
+    }
+    previousInitialRevealRef.current = initialRevealComplete;
+  }, [initialRevealComplete, clearInitialTimers]);
 
   useEffect(() => {
     clearInitialTimers();
@@ -149,6 +159,11 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
     }
 
     if (activeStepIndex === -1 && !initialSequenceStartedRef.current) {
+      if (!initialRevealComplete) {
+        clearInitialTimers();
+        return;
+      }
+
       clearInitialTimers();
       previewTimerRef.current = window.setTimeout(() => {
         setReverseRevealActive(true);
@@ -173,6 +188,7 @@ export function VisualizerLayer({ onBack }: VisualizerLayerProps) {
     setIsPlaying,
     triggerReverseReveal,
     setReverseRevealActive,
+    initialRevealComplete,
   ]);
 
   // Auto-play animation

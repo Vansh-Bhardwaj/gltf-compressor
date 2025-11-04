@@ -1,6 +1,6 @@
+import { Mesh as MeshDef, Node as NodeDef } from "@gltf-transform/core";
 import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Mesh as MeshDef, Node as NodeDef } from "@gltf-transform/core";
 import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import { Group, Material, Mesh, Object3D, Plane, Vector3 } from "three";
 import { useShallow } from "zustand/react/shallow";
@@ -80,6 +80,8 @@ export default function ModelView() {
   const originalSceneMaterialsRef = useRef<Material[]>([]);
   const modifiedSceneMaterialsRef = useRef<Material[]>([]);
   const modelHeightRef = useRef<number>(0);
+  const materialsPreparedRef = useRef(false);
+  const computedNormalsRef = useRef(new WeakSet<Mesh>());
 
   const clippingPlane: Plane[] = useMemo(() => {
     return [new Plane(new Vector3(0, -1, 0), 0.0)];
@@ -98,8 +100,19 @@ export default function ModelView() {
       return false;
     }
 
+    if (
+      materialsPreparedRef.current &&
+      originalSceneMaterialsRef.current.length > 0 &&
+      modifiedSceneMaterialsRef.current.length > 0
+    ) {
+      modelHeightRef.current =
+        useViewportStore.getState().modelDimensions?.[1] ?? 0;
+      return true;
+    }
+
     originalSceneMaterialsRef.current = [];
     modifiedSceneMaterialsRef.current = [];
+    const computedNormals = computedNormalsRef.current;
 
     const collectMaterials = (scene: Group, target: Material[]): void => {
       scene.traverse((object) => {
@@ -117,9 +130,11 @@ export default function ModelView() {
           materials.some(
             (material) => material?.name === "__DefaultMaterial"
           ) &&
-          !mesh.geometry.getAttribute("normal")
+          !mesh.geometry.getAttribute("normal") &&
+          !computedNormals.has(mesh)
         ) {
           mesh.geometry.computeVertexNormals();
+          computedNormals.add(mesh);
         }
 
         materials.forEach((material) => {
@@ -135,9 +150,15 @@ export default function ModelView() {
 
     modelHeightRef.current =
       useViewportStore.getState().modelDimensions?.[1] ?? 0;
+    materialsPreparedRef.current = true;
 
     return true;
   }, [modifiedScene, originalScene]);
+
+  useEffect(() => {
+    materialsPreparedRef.current = false;
+    computedNormalsRef.current = new WeakSet<Mesh>();
+  }, [originalScene, modifiedScene]);
 
   const [revealSpring, revealSpringAPI] = useSpring(
     () => ({
@@ -172,7 +193,8 @@ export default function ModelView() {
           return;
         }
 
-        if (useViewportStore.getState().reverseRevealActive) {
+        const viewportState = useViewportStore.getState();
+        if (viewportState.reverseRevealActive) {
           return;
         }
 
@@ -182,6 +204,10 @@ export default function ModelView() {
         modifiedSceneMaterialsRef.current.forEach((material) => {
           material.clippingPlanes = [];
         });
+
+        if (!viewportState.initialRevealComplete) {
+          useViewportStore.setState({ initialRevealComplete: true });
+        }
       },
     }),
     [originalScene, modifiedScene, clippingPlane]
@@ -199,18 +225,33 @@ export default function ModelView() {
           return;
         }
 
-        if (hologramRef.current) {
-          hologramRef.current.playAnimation();
-        }
-        if (gridRef.current) {
-          gridRef.current.playAnimation();
-        }
+        const triggerRevealAnimation = () => {
+          if (hologramRef.current) {
+            hologramRef.current.playAnimation();
+          }
+          if (gridRef.current) {
+            gridRef.current.playAnimation();
+          }
 
-        // Start clipping after 1 second (when hologram fade-in completes)
-        revealSpringAPI.start({
-          to: { progress: 1.0 },
-          delay: 1000,
-        });
+          // Start clipping after 1 second (when hologram fade-in completes)
+          revealSpringAPI.start({
+            to: { progress: 1.0 },
+            delay: 1000,
+            config: {
+              easing: easings.easeOutCubic,
+              duration: 1000,
+            },
+          });
+        };
+
+        const viewportState = useViewportStore.getState();
+        if (viewportState.initialRevealComplete) {
+          // Restart animation to ensure it is visible even if scene was already shown
+          useViewportStore.setState({ initialRevealComplete: false });
+          triggerRevealAnimation();
+        } else {
+          triggerRevealAnimation();
+        }
       }
     );
 
