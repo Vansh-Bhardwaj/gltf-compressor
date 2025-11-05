@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useModelStore } from "@/stores/useModelStore";
+import { useViewportStore } from "@/stores/useViewportStore";
 import { ArrowLeft, Box, Download, Eye, EyeOff, Info, MapPin, Maximize2, Minimize2, RotateCw, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,18 +21,24 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
   const originalDocument = useModelStore((state) => state.originalDocument);
   const fileName = useModelStore((state) => state.fileName);
   const resetModel = useModelStore((state) => state.resetModel);
-  const [explodeAmount, setExplodeAmount] = useState(0);
-  const [isExploded, setIsExploded] = useState(false);
-  const [showHotspots, setShowHotspots] = useState(true);
-  const [selectedHotspot, setSelectedHotspot] = useState<number | null>(null);
-  const [autoRotate, setAutoRotate] = useState(false);
-  const [showWireframe, setShowWireframe] = useState(false);
+  const explodeAmount = useViewportStore((state) => state.explodeAmount);
+  const setExplodeAmount = useViewportStore((state) => state.setExplodeAmount);
+  const showWireframe = useViewportStore((state) => state.showWireframe);
+  const setShowWireframe = useViewportStore((state) => state.setShowWireframe);
+  const autoRotate = useViewportStore((state) => state.autoRotateCamera);
+  const setAutoRotate = useViewportStore((state) => state.setAutoRotateCamera);
+  const showHotspots = useViewportStore((state) => state.showHotspots);
+  const setShowHotspots = useViewportStore((state) => state.setShowHotspots);
+  const selectedHotspot = useViewportStore((state) => state.selectedHotspot);
+  const setSelectedHotspot = useViewportStore((state) => state.setSelectedHotspot);
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  const isExploded = explodeAmount > 0;
 
   // Mock hotspots - will be replaced with actual data from model
   const mockHotspots = [
     {
-      id: 1,
+      id: "1",
       name: "Main Body",
       position: { x: 0, y: 0, z: 0 },
       description: "The primary structure of the product",
@@ -39,7 +46,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
       category: "Structure",
     },
     {
-      id: 2,
+      id: "2",
       name: "Component A",
       position: { x: 1, y: 0.5, z: 0 },
       description: "Critical functional component",
@@ -47,7 +54,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
       category: "Components",
     },
     {
-      id: 3,
+      id: "3",
       name: "Assembly Point",
       position: { x: -1, y: 0.5, z: 0 },
       description: "Key assembly junction",
@@ -55,7 +62,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
       category: "Assembly",
     },
     {
-      id: 4,
+      id: "4",
       name: "Power Unit",
       position: { x: 0, y: -0.5, z: 0 },
       description: "Electronic power module",
@@ -131,23 +138,19 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
     setIsAnimating(true);
     if (isExploded) {
       setExplodeAmount(0);
-      setIsExploded(false);
     } else {
       setExplodeAmount(100);
-      setIsExploded(true);
     }
     setTimeout(() => setIsAnimating(false), 500);
   };
 
   const handleExplodeChange = (value: number[]) => {
     setExplodeAmount(value[0]);
-    setIsExploded(value[0] > 0);
   };
 
   const handleResetView = () => {
     setIsAnimating(true);
     setExplodeAmount(0);
-    setIsExploded(false);
     setSelectedHotspot(null);
     setShowWireframe(false);
     setTimeout(() => setIsAnimating(false), 500);
@@ -268,42 +271,7 @@ export function VisualizerProduct({ onBack }: VisualizerProductProps) {
               </Button>
             </div>
 
-            {/* Hotspot Indicators (when enabled) */}
-            {showHotspots && mockHotspots.map((hotspot, index) => (
-              <button
-                key={hotspot.id}
-                onClick={() => setSelectedHotspot(
-                  selectedHotspot === hotspot.id ? null : hotspot.id
-                )}
-                className={`absolute z-10 group transition-all duration-300 ${
-                  selectedHotspot === hotspot.id
-                    ? "scale-110"
-                    : "scale-100 hover:scale-105"
-                }`}
-                style={{
-                  // These would be calculated from actual 3D positions
-                  top: `${25 + index * 18}%`,
-                  left: `${15 + index * 22}%`,
-                }}
-                title={`${hotspot.name} - Press ${index + 1}`}
-              >
-                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                  selectedHotspot === hotspot.id
-                    ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
-                    : "bg-card/95 backdrop-blur-sm text-foreground shadow-md hover:shadow-lg"
-                }`}>
-                  <MapPin className="w-5 h-5" />
-                  {/* Number badge */}
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shadow-sm">
-                    {index + 1}
-                  </div>
-                  {/* Pulse animation when selected */}
-                  {selectedHotspot === hotspot.id && (
-                    <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />
-                  )}
-                </div>
-              </button>
-            ))}
+
 
             {/* Selected Hotspot Info */}
             {selectedHotspot && (

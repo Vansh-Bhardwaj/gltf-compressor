@@ -12,6 +12,8 @@ import { easings, useSpring } from "@react-spring/web";
 import { Preload } from "@react-three/drei";
 import CameraControls from "./CameraControls";
 import Confetti from "./Confetti";
+import { ExplodedView } from "./ExplodedView";
+import { ProductHotspots } from "./ProductHotspots";
 import { Grid } from "./drei/Grid";
 import { Stage } from "./drei/Stage";
 import { Hologram } from "./Hologram";
@@ -388,6 +390,8 @@ export default function ModelView() {
           <CameraControls />
           <MaterialHighlighter />
           <Confetti />
+          <ExplodedView scene={modifiedScene} />
+          <ProductHotspots scene={modifiedScene} />
           <Preload all />
         </Suspense>
         <GizmoHelper alignment="bottom-right" margin={[63.5, 63.5]}>
